@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Stock Market Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  font-family: Inter, sans-serif;
+  background: radial-gradient(circle at top, #020617, #000);
+  color: #e5e7eb;
+  margin: 0;
+  padding: 40px;
+}
+.container { max-width: 1000px; margin: auto; }
+h1 { font-size: 2.6rem; margin-bottom: 24px; }
+.card {
+  background: rgba(2,6,23,.9);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 25px 50px rgba(0,0,0,.7);
+  margin-bottom: 24px;
+}
+form { display: flex; gap: 12px; }
+input, button {
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+}
+input {
+  flex: 1;
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: white;
+}
+button {
+  background: #22c55e;
+  color: #022c22;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover { background: #16a34a; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+.metric {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+.metric span { font-size: 1.6rem; display: block; }
+.positive { color: #4ade80; }
+.negative { color: #f87171; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📈 Stock Market Analyzer</h1>
+
+<div class="card">
+<form method="post" action="/analyze">
+  <input name="ticker" placeholder="Enter ticker (e.g. AAPL, TSLA)" required />
+  <button>Analyze</button>
+</form>
+</div>
+
+{% if data %}
+<div class="card">
+<h2>{{ data.ticker }}</h2>
+<div class="grid">
+  <div class="metric"><span>${{ data.price }}</span>Current Price</div>
+  <div class="metric"><span>${{ data.high }}</span>30d High</div>
+  <div class="metric"><span>${{ data.low }}</span>30d Low</div>
+  <div class="metric"><span>{{ data.volume }}</span>Volume</div>
+  <div class="metric">
+    <span class="{{ 'positive' if data.change >= 0 else 'negative' }}">{{ data.change }}%</span>
+    Monthly Change
+  </div>
+</div>
+</div>
+
+<div class="card">
+<canvas id="chart"></canvas>
+</div>
+
+<script>
+const ctx = document.getElementById('chart');
+new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: {{ data.history | map(attribute='Date') | list | safe }},
+    datasets: [{
+      label: 'Closing Price',
+      data: {{ data.history | map(attribute='Close') | list | safe }},
+      tension: 0.4
+    }]
+  }
+});
+</script>
+{% endif %}
+
+</div>
+</body>
+</html>
